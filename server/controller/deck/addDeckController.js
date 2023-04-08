@@ -1,5 +1,4 @@
 const makeAddDeck = ({ postDeck }) => async (httpRequest) => {
-    console.log(httpRequest)
     await postDeck({deckInfo: httpRequest.body})
     return {
         headers: {

@@ -15,7 +15,7 @@ app.use(express.json())
 require('./routes')(app)
 
 async function main() {
-    await mongoose.connect(`${process.env.DATABSE_URI}/test`);
+    await mongoose.connect(`${process.env.DATABSE_URI}`);
 }
 
 main()

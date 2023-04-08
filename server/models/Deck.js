@@ -7,7 +7,8 @@ const cardSchema = new mongoose.Schema({
 const DeckSchema = new mongoose.Schema({
     deckName: {type: String, require: true},
     owner: {type: mongoose.Schema.ObjectId, require: true},
-    cards: {type: [cardSchema]}
+    cards: {type: [cardSchema]},
+    reviewList: {type: [mongoose.Schema.ObjectId]},
 })
 
 const Deck = new mongoose.model('decks', DeckSchema)

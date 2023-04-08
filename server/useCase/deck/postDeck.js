@@ -1,7 +1,9 @@
 const Deck = require('../../models/Deck')
-const makePostDeck = ({}) => async ({deckInfo}) => {
+const makePostDeck = ({ }) => async ({deckInfo}) => {
     try {
-        // console.log(deckInfo)
+        if(deckInfo.text.length > 0) {
+        }
+        await buildDeck()
         const deck = new Deck(deckInfo)
         deck.save()
         return
