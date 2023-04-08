@@ -59,13 +59,14 @@ the change to the object created in makeCallback(). Then all controllers that ne
 object can easily access it, and controllers that don't need it can ignore the property
 
 ## Controller Directory
-Receives the http request from makeCallback(), validate and extracts the data needed 
-to for the use cases.
-Additionally, controllers creates the data needed for the response object
+Receives the http request from makeCallback(), validates and extracts the data needed 
+to for the use cases, then calls the usecase.
+Additionally, controllers create the data needed for the response object. The data can be returned
+from a usecase, or if the usecase does not return anything, the controller can send a message that
+notifies the user.
 
 ## UseCase Directory
-Contains the business logic of the system. For example, a user can create an account, or
-a user can create a deck.
+Contains the business logic of the system. Some examples of usecases: a user can create an account, a user can log in to their account, and a user can create a deck.
 Each function will access a mongodb model located at the directory **models** to query, insert
 or delete data.
 
