@@ -1,10 +1,9 @@
-const language = require('@google-cloud/language');
+const language = require('@google-cloud/language')
 const path = require('path')
 const makeListDeck = require('./listDeck')
 const makePostDeck = require('./postDeck')
 const makePostCards = require('./postCards')
-
-const { Configuration, OpenAIApi } = require("openai");
+const makePatchDeck = require('./patchDeck')
 
 // async function buildDeck(text) {
 //     const configuration = new Configuration({
@@ -24,66 +23,68 @@ const { Configuration, OpenAIApi } = require("openai");
 
 // }
 
-const credentials = require('./blue-cobalt-377922-842cadf535f9.json')
-async function buildDeck1(text) {
-    // Creates a client
-    console.log(text)
-    const client = new language.LanguageServiceClient({
-        credentials: credentials
-    });
+// const credentials = require('./blue-cobalt-377922-842cadf535f9.json')
+// async function buildDeck1(text) {
+//     // Creates a client
+//     console.log(text)
+//     const client = new language.LanguageServiceClient({
+//         credentials: credentials
+//     });
 
-    // Prepares a document, representing the provided text
-    const document = {
-        content: text,
-        type: 'PLAIN_TEXT',
-    };
+//     // Prepares a document, representing the provided text
+//     const document = {
+//         content: text,
+//         type: 'PLAIN_TEXT',
+//     };
 
-    // const [analysis] = await client.analyzeSyntax({
-    //     document: {
-    //         content: text,
-    //         type: 'PLAIN_TEXT'
-    //     }
-    // }) 
-    // console.log(analysis.tokens[0].text)
-    // console.log(analysis.tokens[0].partOfSpeech)
-    // console.log(analysis.tokens[0].dependencyEdge)
+//     // const [analysis] = await client.analyzeSyntax({
+//     //     document: {
+//     //         content: text,
+//     //         type: 'PLAIN_TEXT'
+//     //     }
+//     // }) 
+//     // console.log(analysis.tokens[0].text)
+//     // console.log(analysis.tokens[0].partOfSpeech)
+//     // console.log(analysis.tokens[0].dependencyEdge)
 
-    // 1============
-    // // Detects entities in the document
-    // const [result] = await client.analyzeEntities({document});
+//     // 1============
+//     // // Detects entities in the document
+//     // const [result] = await client.analyzeEntities({document});
 
-    // const entities = result.entities;
+//     // const entities = result.entities;
 
-    // console.log('Entities:');
-    // entities.forEach(entity => {
-    //     console.log(entity.name);
-    //     console.log(` - Type: ${entity.type}, Salience: ${entity.salience}`);
-    //     if (entity.metadata && entity.metadata.wikipedia_url) {
-    //         console.log(` - Wikipedia URL: ${entity.metadata.wikipedia_url}`);
-    //     }
-    // });
+//     // console.log('Entities:');
+//     // entities.forEach(entity => {
+//     //     console.log(entity.name);
+//     //     console.log(` - Type: ${entity.type}, Salience: ${entity.salience}`);
+//     //     if (entity.metadata && entity.metadata.wikipedia_url) {
+//     //         console.log(` - Wikipedia URL: ${entity.metadata.wikipedia_url}`);
+//     //     }
+//     // });
 
-    // 2==============
-    // Need to specify an encodingType to receive word offsets
-    const encodingType = 'UTF8';
+//     // 2==============
+//     // Need to specify an encodingType to receive word offsets
+//     const encodingType = 'UTF8';
 
-    // Detects the sentiment of the document
-    const [syntax] = await client.analyzeSyntax({document, encodingType});
+//     // Detects the sentiment of the document
+//     const [syntax] = await client.analyzeSyntax({document, encodingType});
 
-    console.log('Tokens:');
-    syntax.tokens.forEach(part => {
-    console.log(`${part.partOfSpeech.tag}: ${part.text.content}`);
-    console.log('Morphology:', part.partOfSpeech);
-    });
-}
+//     console.log('Tokens:');
+//     syntax.tokens.forEach(part => {
+//     console.log(`${part.partOfSpeech.tag}: ${part.text.content}`);
+//     console.log('Morphology:', part.partOfSpeech);
+//     });
+// }
 
 
 const listDeck = makeListDeck({})
 const postDeck = makePostDeck({})
 const postCards = makePostCards({})
+const patchDeck = makePatchDeck({})
 
 module.exports = {
     listDeck,
     postDeck,
-    postCards
+    postCards,
+    patchDeck,
 }

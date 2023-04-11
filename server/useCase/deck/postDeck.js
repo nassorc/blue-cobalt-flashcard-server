@@ -3,7 +3,7 @@ const makePostDeck = ({ }) => async ({deckInfo}) => {
     try {
         if(deckInfo.text.length > 0) {
         }
-        await buildDeck()
+        // await buildDeck()
         const deck = new Deck(deckInfo)
         deck.save()
         return
