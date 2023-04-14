@@ -1,9 +1,12 @@
 const language = require('@google-cloud/language')
 const path = require('path')
+const {supermemo} = require('supermemo')
+
 const makeListDeck = require('./listDeck')
 const makePostDeck = require('./postDeck')
 const makePostCards = require('./postCards')
 const makePatchDeck = require('./patchDeck')
+const makeGradeCard = require('./gradeCard')
 
 // async function buildDeck(text) {
 //     const configuration = new Configuration({
@@ -81,10 +84,11 @@ const listDeck = makeListDeck({})
 const postDeck = makePostDeck({})
 const postCards = makePostCards({})
 const patchDeck = makePatchDeck({})
-
+const gradeCard = makeGradeCard({ practice: supermemo })
 module.exports = {
     listDeck,
     postDeck,
     postCards,
     patchDeck,
+    gradeCard,
 }

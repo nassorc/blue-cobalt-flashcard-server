@@ -1,7 +1,7 @@
 const express = require('express')
 const router = express.Router()
-const makeCallback = require('../expressCallback') 
-const { getDecks, addDeck, addCards, updateDeck } = require('../controller/deck')
+const makeCallback = require('../middleware/controllerHandler') 
+const { getDecks, addDeck, addCards, updateDeck, postGradeCard } = require('../controller/deck')
 
 /**
  * @api {post} /deck/ Post new Deck
@@ -41,6 +41,8 @@ router.post('/cards', makeCallback(addCards))
  * 
  */
 // router.post('/cards/update/:id', makeCallback(updateDeck))
+
+router.post('/cards/grade', makeCallback(postGradeCard));
 
 
 module.exports = router

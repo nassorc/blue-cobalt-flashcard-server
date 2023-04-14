@@ -1,5 +1,10 @@
 const makeAddDeck = ({ postDeck }) => async (httpRequest) => {
-    await postDeck({deckInfo: httpRequest.body})
+    try {
+        await postDeck({deckInfo: httpRequest.body})
+    }
+    catch(err) {
+        throw new Error(err.message)
+    }
     return {
         headers: {
             'Content-Type': 'application/json'

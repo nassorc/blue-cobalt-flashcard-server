@@ -1,4 +1,7 @@
-function makeExpressCallback(controller) {
+// goes between the request and the controller
+// Objective is to create a common request object that 
+// all controllers can use.
+function makeControllerHandler(controller) {
     return async function(req, res) {
         const httpRequest = {
             body: req.body,
@@ -26,4 +29,4 @@ function makeExpressCallback(controller) {
     }
 }
 
-module.exports = makeExpressCallback
+module.exports = makeControllerHandler
