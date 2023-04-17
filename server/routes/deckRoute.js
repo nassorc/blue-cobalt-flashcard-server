@@ -1,7 +1,7 @@
 const express = require('express')
 const router = express.Router()
 const makeCallback = require('../middleware/controllerHandler') 
-const { getDecks, addDeck, addCards, updateDeck, postGradeCard } = require('../controller/deck')
+const { getDecks, addDeck, addCards, updateDeck, postGradeCard, deleteDeck } = require('../controller/deck')
 
 /**
  * @api {post} /deck/ Post new Deck
@@ -29,7 +29,11 @@ router.get('/:id', makeCallback(getDecks))
  * 
  * @apiParam {String} id Deck id
  */
-router.post('/:id', makeCallback(updateDeck))
+router.post('/update/:id', makeCallback(updateDeck))
+
+router.post('/delete/:id', makeCallback(deleteDeck))
+
+// Card routes
 
 router.post('/cards', makeCallback(addCards))
 /**
