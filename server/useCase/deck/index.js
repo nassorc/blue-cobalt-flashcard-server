@@ -9,6 +9,8 @@ const makePatchDeck = require('./patchDeck')
 const makeRemoveDeck = require('./removeDeck')
 const makeGradeCard = require('./gradeCard')
 
+const { Configuration, OpenAIApi } = require("openai");
+
 const listDeck = makeListDeck({})
 const postDeck = makePostDeck({})
 const postCards = makePostCards({})
