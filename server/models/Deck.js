@@ -23,6 +23,7 @@ const DeckSchema = new mongoose.Schema({
     cards: {type: [cardSchema]},
     reviewList: {type: [mongoose.Schema.ObjectId], default: []},
     deckImage: {type: String},
+    deckImageName: {type: String},
     createdAt: {type: Date, default: (new Date()).toISOString()},
     tags: {type: [String]},
     deckSettings: {type: deckSettingsSchema}

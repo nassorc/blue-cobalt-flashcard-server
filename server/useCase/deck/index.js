@@ -2,6 +2,7 @@ const language = require('@google-cloud/language')
 const path = require('path')
 const {supermemo} = require('supermemo')
 
+const makeListDecks = require('./listDecks')
 const makeListDeck = require('./listDeck')
 const makePostDeck = require('./postDeck')
 const makePostCards = require('./postCards')
@@ -11,7 +12,8 @@ const makeGradeCard = require('./gradeCard')
 
 const { Configuration, OpenAIApi } = require("openai");
 
-const listDeck = makeListDeck({})
+const listDecks = makeListDecks({})
+const listDeck = makeListDeck({}) 
 const postDeck = makePostDeck({})
 const postCards = makePostCards({})
 const patchDeck = makePatchDeck({})
@@ -19,6 +21,7 @@ const removeDeck = makeRemoveDeck({})
 const gradeCard = makeGradeCard({ practice: supermemo })
 
 module.exports = {
+    listDecks,
     listDeck,
     postDeck,
     postCards,

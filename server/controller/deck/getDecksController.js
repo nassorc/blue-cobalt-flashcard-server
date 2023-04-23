@@ -1,7 +1,7 @@
-const makeGetDecks = ({ listDeck }) => async (httpRequest) => {
+const makeGetDecks = ({ listDecks }) => async (httpRequest) => {
     // access use case
     try {
-        const deckList = await listDeck({userId: httpRequest.params.id})
+        const deckList = await listDecks({userId: httpRequest.params.id})
         if(deckList) {
             return {
                 headers: {
