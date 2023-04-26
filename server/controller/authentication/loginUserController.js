@@ -17,7 +17,7 @@ const makeLoginUser = ({authenticateUser}) => async (httpRequest) => {
             headers: {
                 'Content-Type': 'application/json'
             },
-            statusCode: 404,
+            statusCode: 401 ,
             body: {
                 message: 'incorrect email or password'
             }

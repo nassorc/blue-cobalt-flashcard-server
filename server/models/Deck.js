@@ -24,6 +24,7 @@ const DeckSchema = new mongoose.Schema({
     reviewList: {type: [mongoose.Schema.ObjectId], default: []},
     deckImage: {type: String},
     deckImageName: {type: String},
+    blurhash: {type: String},
     createdAt: {type: Date, default: (new Date()).toISOString()},
     tags: {type: [String]},
     deckSettings: {type: deckSettingsSchema}

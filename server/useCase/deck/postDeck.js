@@ -6,7 +6,6 @@ const makePostDeck = ({ }) => async ({deckInfo}) => {
         return
     }
     catch(err) {
-        console.log(err)
         throw new Error(err)
     }
     
