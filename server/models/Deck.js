@@ -19,7 +19,7 @@ const deckSettingsSchema = new mongoose.Schema({
 
 const DeckSchema = new mongoose.Schema({
     deckName: {type: String, require: true},
-    owner: {type: mongoose.Schema.ObjectId, require: true},
+    owner: {type: mongoose.Schema.ObjectId, required: true},
     cards: {type: [cardSchema]},
     reviewList: {type: [mongoose.Schema.ObjectId], default: []},
     deckImage: {type: String},
@@ -29,7 +29,6 @@ const DeckSchema = new mongoose.Schema({
     tags: {type: [String]},
     deckSettings: {type: deckSettingsSchema}
 })
-
 
 const Deck = new mongoose.model('decks', DeckSchema)
 
