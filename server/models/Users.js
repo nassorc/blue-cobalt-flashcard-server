@@ -7,14 +7,14 @@ const UserSchema = new mongoose.Schema({
 
     firstName: {type: String, default: ''},
     lastName: {type: String, default: ''},
-    Biography: {type: String, default: ''},
+    biography: {type: String, default: ''},
     userPhoto: {type: String, default: ''},
     decks: {type: [mongoose.Schema.ObjectId], default: []},
 })
 
 const TeacherSchema = new mongoose.Schema({
     userId: {type: mongoose.Schema.ObjectId, required: true},
-    classArray: {type: [mongoose.Schema.ObjectId], default: []}
+    classList: {type: [mongoose.Schema.ObjectId], default: []}
 })
 
 // represents the collection of the document

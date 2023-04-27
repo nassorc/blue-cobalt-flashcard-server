@@ -15,6 +15,7 @@ const cardSchema = new mongoose.Schema({
 const deckSettingsSchema = new mongoose.Schema({
     reviewCards: {type: Number, default: 10},
     newCards: {type: Number, default: 5},
+    visibility: {type: String, default: 'private'}
 })
 
 const DeckSchema = new mongoose.Schema({
