@@ -24,7 +24,8 @@
     "openai": "^3.2.1",
     "password-validator": "^5.3.0",
     "supermemo": "^2.0.17",
-    "validator": "^13.9.0"
+    "validator": "^13.9.0",
+    "winston": "^3.8.2"
   },
   "devDependencies": {
     "apidoc": "^0.54.0"
