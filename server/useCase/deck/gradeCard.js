@@ -16,6 +16,7 @@ const makeGradeCard = ({ practice }) => async ({ userId, cardId, grade } = {}) =
             { owner: userId, 'cards._id': cardId },
             { cards: { $elemMatch: { _id: cardId } } }
         );
+        // extract data to update due data  
         const card = foundDeck.cards[0]
         const stats = {
             interval: card.interval,
@@ -23,15 +24,16 @@ const makeGradeCard = ({ practice }) => async ({ userId, cardId, grade } = {}) =
             efactor: card.efactor,
             status: card.status,
         }
-        // set card to reviewed if interval goes up
-        // get retquired data to compute new due date
+        // insert data to algorithm
         const { interval, repetition, efactor } = practice(stats, grade)
         const reviewedDate = new Date();
         let date = new Date();
         let dueDate = new Date();
+        // set new due date
         dueDate.setDate(date.getDate() + interval)
 
-        if(stats.status === 'new') {
+        // if card type is new, set to reviewed
+        if(stats.status === 'new' && interval > 0) {
             // update data
             await Deck.findOneAndUpdate(
                 { owner: userId, 'cards._id': cardId },
@@ -50,12 +52,6 @@ const makeGradeCard = ({ practice }) => async ({ userId, cardId, grade } = {}) =
                 { $set: { 'cards.$.interval': interval, 'cards.$.repetition': repetition, 'cards.$.efactor': efactor, 'cards.$.reviewedDate': reviewedDate.toISOString(), 'cards.$.dueDate': dueDate.toISOString()} }
             )
         }
-
-        
-
-        // update review list
-
-        // return response
     }
     catch(err) {
         throw new Error(err)
