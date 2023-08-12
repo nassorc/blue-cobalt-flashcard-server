@@ -1,4 +1,5 @@
 import mongoose, { Types } from "mongoose"
+import bcrypt from "bcrypt"
 
 // blueprint for the structure of user document
 const UserSchema = new mongoose.Schema({
@@ -10,6 +11,12 @@ const UserSchema = new mongoose.Schema({
     biography: {type: String, default: ''},
     userPhoto: {type: String, default: ''},
     decks: {type: [Types.ObjectId], default: []},
+})
+
+UserSchema.pre('save', async function (next) {
+  const hashedPassword = await bcrypt.hash(this.password, 10)
+  this.password = hashedPassword
+  next()
 })
 
 const TeacherSchema = new mongoose.Schema({
