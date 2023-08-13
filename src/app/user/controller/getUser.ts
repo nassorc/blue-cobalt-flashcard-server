@@ -1,29 +1,8 @@
+import createResponse from "../../../utils/createResponse"
+
 export default function makeGetUser({ listUser }) {
   return async (httpRequest) => {
     const user = await listUser(httpRequest.params.userId)
-    // user found
-    if(user) { 
-        return {
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            statusCode: 200,
-            body: {
-                details: user
-            }
-        }
-    }
-    else {
-        // user does not exist
-        return {
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            statusCode: 404,
-            body: {
-                details: [] 
-            }
-        }
-    }
+    return createResponse(200, {user})
 }
 }

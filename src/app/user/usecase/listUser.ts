@@ -1,3 +1,4 @@
+import AppError from '../../../lib/error/AppError'
 import User from '../Users'
 
 export default function makeListUser({}) {
