@@ -4,6 +4,9 @@ import { getUser, createUser, loginUser } from './controller'
 import validateToken from '../../middleware/validateToken'
 import validateSchema from '../../middleware/validateSchema'
 import UserSchema from './Schema'
+import config from '../../config'
+import UserModel from './Users'
+import { verifyToken } from '../../lib/jwt'
 const router = express.Router()
 
 /**
@@ -29,5 +32,25 @@ router.post('/', validateSchema(UserSchema), makeCallback(createUser))
  * 
  */
 router.get('/:userId', validateToken, makeCallback(getUser))
+
+router.get('/logout', async (req, res) => {
+  const cookies = req.cookies
+  console.log(cookies)
+  if(!cookies[config.api.token.at_name] || !cookies[config.api.token.at_name]) {
+    return res.sendStatus(204) // no content
+  }
+  else {
+    const accessToken = cookies[config.api.token.at_name];
+    const decoded = verifyToken(accessToken, config.api.token.at_secret)
+    if (!decoded) {
+      return res.status(500).send('couldn\'t logout user. Please try again later')
+    }
+    res.clearCookie(config.api.token.at_name, {httpOnly: true})
+    res.clearCookie(config.api.token.rt_name, {httpOnly: true})
+    await UserModel.findByIdAndUpdate(decoded.decoded.userId, { $set: { sessionValid: false }});
+    return res.sendStatus(200)
+  }
+
+})
 
 export default router
