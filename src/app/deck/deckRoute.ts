@@ -2,21 +2,21 @@ import express from 'express'
 import makeCallback from '../../middleware/controllerHandler'
 const router = express.Router()
 import { 
-  getDeck, 
-  getDecks, 
-  addDeck, 
-  addCards, 
-  updateDeck, 
-  postGradeCard, 
-  deleteDeck
-} from './controller'
+  getOneDeckHandler,
+  getManyDecksHandler,
+  addDeckHandler,
+  updateDeckHandler,
+  deleteDeckHandler,
+  gradeCardHandler,
+  addCardsHandler,
+} from './deck-controllers'
 
 /**
  * @api {post} /deck/ Post new Deck
  * @apiName PostDeck
  * @apiGroup Deck
  */
-router.post('/', makeCallback(addDeck))
+router.post('/', makeCallback(addDeckHandler))
 
 /**
  * @api {get} /deck/:id Get user decks
@@ -28,9 +28,9 @@ router.post('/', makeCallback(addDeck))
  * @apiSuccess {String} deckName Deck Name
  * @apiSuccess {[Object]} cards Array of card objects owned by user
  */
-router.get('/:id', makeCallback(getDecks))
+router.get('/:id', makeCallback(getManyDecksHandler))
 
-router.get('/get/:id', makeCallback(getDeck))
+router.get('/get/:id', makeCallback(getOneDeckHandler))
 /**
  * @api {post} /deck/:id 
  * @apiName UpdateDeck /deck/:id Update user deck
@@ -38,13 +38,13 @@ router.get('/get/:id', makeCallback(getDeck))
  * 
  * @apiParam {String} id Deck id
  */
-router.post('/update/:id', makeCallback(updateDeck))
+router.post('/update/:id', makeCallback(updateDeckHandler))
 
-router.post('/delete/:id', makeCallback(deleteDeck))
+router.post('/delete/:id', makeCallback(deleteDeckHandler))
 
 // Card routes
 
-router.post('/cards', makeCallback(addCards))
+router.post('/cards', makeCallback(addCardsHandler))
 /**
  * @api {post} /cards/update/:id Update card
  * @apiName UpdateCard
@@ -55,6 +55,6 @@ router.post('/cards', makeCallback(addCards))
  */
 // router.post('/cards/update/:id', makeCallback(updateDeck))
 
-router.post('/cards/grade', makeCallback(postGradeCard));
+router.post('/cards/grade', makeCallback(gradeCardHandler));
 
 export default router;
