@@ -11,6 +11,8 @@ const UserSchema = new mongoose.Schema({
     biography: {type: String, default: ''},
     userPhoto: {type: String, default: ''},
     decks: {type: [Types.ObjectId], default: []},
+
+    sessionValid: {type: Boolean, default: false},
 })
 
 UserSchema.pre('save', async function (next) {

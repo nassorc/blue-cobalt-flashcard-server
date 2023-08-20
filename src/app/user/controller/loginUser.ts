@@ -1,8 +1,9 @@
-import createResponse from "../../../utils/createResponse"
+import createResponse from "../../../lib/createResponse"
 
 export default function makeLoginUser ({authenticateUser}) {
   return async (httpRequest) => {
-    const user = await authenticateUser({userInfo: httpRequest.body})
-    return createResponse(200, {user})
+    const {token, userId, cookies} = await authenticateUser({userInfo: httpRequest.body})
+    const body = {token, userId}
+    return createResponse(200, body, cookies)
   } 
 }
