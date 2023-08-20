@@ -1,6 +1,10 @@
+// TODO:
+// * changing funciton names used in decks, might change architecture, project uses architecture that isn't being used
+// * problems with querying deck data
 import express from "express"
 import mongoose from "mongoose"
 import cors from "cors"
+import cookieParser from "cookie-parser"
 import log from "./lib/logger"
 import "dotenv/config"
 const app = express()
@@ -11,9 +15,9 @@ app.use(cors())
 
 const PORT = process.env.PORT || 3001
 
+app.use(cookieParser());
 app.use(express.json())
-
-require('./routes')(app)
+require('./app')(app)
 
 app.use((err, req, res, next) => {
   log.error(err.message);
@@ -22,7 +26,10 @@ app.use((err, req, res, next) => {
     next(err)
   }
   err.statusCode = err.statusCode || 500;
-  res.status(err.statusCode).json({message: err.message})
+  res.status(err.statusCode).json({error: {
+    status: err.statusCode,
+    message: err.message
+  }})
 })
 
 app.listen(PORT, async () => {
