@@ -15,11 +15,18 @@ const UserSchema = new mongoose.Schema({
     sessionValid: {type: Boolean, default: false},
 })
 
+// encrypt password before saving
 UserSchema.pre('save', async function (next) {
   const hashedPassword = await bcrypt.hash(this.password, 10)
   this.password = hashedPassword
   next()
 })
+// add function to decrypt hashed password
+UserSchema.methods.compareHashPassword = async function(password) {
+  const result = await bcrypt.compare(password, this.password)
+  return result
+}
+
 
 const TeacherSchema = new mongoose.Schema({
     userId: {type: Types.ObjectId, required: true},
