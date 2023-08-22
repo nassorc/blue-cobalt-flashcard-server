@@ -8,6 +8,6 @@ module.exports = (app: any) => {
     app.use('/deck', validateToken, deckRoute)
     app.use('/user', userRoute)
     app.all('*', (req, res, next) => {
-      next(new AppError('This route does not exist', 404))
+      next(new AppError('Route not found', 404))
     })
 }

@@ -11,7 +11,10 @@ const app = express()
 
 // enable cross-origin resource sharing
 // app.use(cors(require('./config/corsOptions')))
-app.use(cors())
+app.use(cors({
+  origin: 'http://localhost:3000',
+  credentials: true
+}))
 
 const PORT = process.env.PORT || 3001
 
