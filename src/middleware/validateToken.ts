@@ -41,7 +41,7 @@ const validateToken = async (req: Request, res: Response, next: NextFunction) =>
     // token reissued, call next()
     req.body = Object.assign(req.body, {locals: {userId: decodeRefreshToken.decoded.userId}})
   }
-  else if(!accessToken.valid) {
+  else if(!decodedAccessToken.valid) {
     next(new AppError('Invalid Access Token', 401))
   }
   else {
