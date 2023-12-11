@@ -1,6 +1,6 @@
 import express from 'express'
 import makeCallback from '../../middleware/controllerHandler'
-import { getUserHandler, createUserHandler, loginUserHandler } from './user-controllers'
+import { getUserHandler, createUserHandler, loginUserHandler, deleteUserHandler, updateProfileImageHandler } from './user-controllers'
 import validateToken from '../../middleware/validateToken'
 import validateSchema from '../../middleware/validateSchema'
 import UserSchema from './Schema'
@@ -49,7 +49,8 @@ router.get('/logout', async (req, res) => {
     await UserModel.findByIdAndUpdate(decoded.decoded.userId, { $set: { sessionValid: false }});
     return res.sendStatus(200)
   }
-
 })
+router.post('/profile-image', validateToken, makeCallback(updateProfileImageHandler))
+router.post('/:userId/delete', validateToken, makeCallback(deleteUserHandler))
 
 export default router

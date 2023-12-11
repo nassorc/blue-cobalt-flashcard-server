@@ -24,6 +24,7 @@ require('./app')(app)
 
 app.use((err, req, res, next) => {
   log.error(err.message);
+  log.error(err)
   // response sent
   if(res.headersSent) {
     next(err)

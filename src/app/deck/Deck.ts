@@ -3,6 +3,7 @@ import mongoose, { Types } from "mongoose";
 const cardSchema = new mongoose.Schema({
     front: { type: String },
     back: { type: String },
+    cardImage: { type: String, default: ""},
     status: { type: String, default: "new" },
     interval: { type: Number, default: 0 },
     repetition: { type: Number, default: 0 },

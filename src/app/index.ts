@@ -1,6 +1,6 @@
 // import authRoute from './authRoute'
 import deckRoute from './deck/deckRoute'
-import userRoute from './user/userRoute'
+import userRoute from './user/routes'
 import validateToken from '../middleware/validateToken'
 import AppError from '../lib/error/AppError'
 

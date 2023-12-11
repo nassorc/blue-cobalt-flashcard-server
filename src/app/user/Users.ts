@@ -9,8 +9,8 @@ const UserSchema = new mongoose.Schema({
     firstName: {type: String, default: ''},
     lastName: {type: String, default: ''},
     biography: {type: String, default: ''},
-    userPhoto: {type: String, default: ''},
-    decks: {type: [Types.ObjectId], default: []},
+    profileImage: {type: String, default: ''},
+    decks: {type: [{type: Types.ObjectId, ref: 'decks'}], default: []},
 
     sessionValid: {type: Boolean, default: false},
 })

@@ -9,13 +9,16 @@ export const userService = ((User) => {
   return {
     getUser: getUser(User),
     createUser: createUser(User),
-    loginUser: loginUser(User)
+    loginUser: loginUser(User),
+    deleteUser: deleteUser(User),
+    updateProfileImage: updateProfileImage(User)
   }
 })(User)
 
 function getUser(User) {
   return async (userId) => {
-    const user = await User.findOne({ _id: new mongoose.Types.ObjectId(userId)}, "_id email username deck userPhoto")
+    const user = await User.findOne({ _id: new mongoose.Types.ObjectId(userId)}, "-__v -password -sessionValid").populate("decks").exec()
+    console.log(user)
     return user
   }
 }
@@ -59,5 +62,17 @@ function loginUser(User) {
 
     User.findByIdAndUpdate(user._id, {$set: {sessionValid: false}})
     return {userId: user._id, cookies}
+  }
+}
+
+function deleteUser(User) {
+  return async (id: string) => {
+      const user = await User.findOneAndDelete({_id: id});
+  }
+}
+
+function updateProfileImage(User) {
+  return async (id: string, imageURL: string) => {
+    await User.findByIdAndUpdate(id, {profileImage: imageURL});
   }
 }

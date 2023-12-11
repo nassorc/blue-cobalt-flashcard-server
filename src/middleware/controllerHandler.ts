@@ -17,7 +17,7 @@ export default function makeControllerHandler(controller) {
         }
         try {
             const httpResponse = await controller(httpRequest)
-            if(httpResponse.cookies) {
+            if(httpResponse?.cookies) {
               httpResponse.cookies.forEach(cookie => {
                 Object.entries(cookie).forEach(([key, value]: any) => {
                   res.cookie(key, value.value, {httpOnly: value.httpOnly, maxAge: value.maxAge} )
