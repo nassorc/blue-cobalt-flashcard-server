@@ -1,55 +1,49 @@
-import express from 'express'
-import makeCallback from '../../middleware/controllerHandler'
-import { getUserHandler, createUserHandler, loginUserHandler } from './user-controllers'
-import validateToken from '../../middleware/validateToken'
-import validateSchema from '../../middleware/validateSchema'
-import UserSchema from './Schema'
-import config from '../../config'
-import UserModel from './Users'
-import { verifyToken } from '../../lib/jwt'
-const router = express.Router()
+import express from "express";
+import makeCallback from "../../middleware/controllerHandler";
+import {
+  getUserHandler,
+  createUserHandler,
+  loginUserHandler,
+} from "./user-controllers";
+import validateToken from "../../middleware/validateToken";
+import validateSchema from "../../middleware/validateSchema";
+import UserSchema from "./Schema";
+import config from "../../config";
+import UserModel from "./Users";
+import { verify } from "../../utils/jwt";
 
-/**
- * @api {post} /user/login Logs in an existing user
- * @apiName LoginUser
- * @apiGroup User
- * 
- */
-router.post('/login', validateSchema(UserSchema), makeCallback(loginUserHandler))
+import { userService } from "./user-usecases";
+const router = express.Router();
 
-/**
- * @api {post} /user/ Creates a new user
- * @apiName CreateUser
- * @apiGroup User
- * 
- */
-// router.post('/', validateSchema(UserSchema), makeCallback(createUserHandler))
+router.post("/login", validateSchema(UserSchema), loginUserHandler);
+router.get("/me", validateToken, getUserHandler);
+router.get("/", (req, res) => {
+  const { skip, limit } = req.query;
+  userService.list(limit, skip);
+  res.sendStatus(200);
+});
+router.get("/token/validate", (req, res) => {
+  res.status(200).send({ valid: true });
+});
 
-/**
- * @api {get} /:userId find user given userId as a parameter
- * @apiName FindUser
- * @apiGroup User
- * 
- */
-router.get('/:userId', validateToken, makeCallback(getUserHandler))
-
-router.get('/logout', async (req, res) => {
-  const cookies = req.cookies
-  if(!cookies[config.api.token.at_name] || !cookies[config.api.token.at_name]) {
-    return res.sendStatus(204) // no content
-  }
-  else {
-    const accessToken = cookies[config.api.token.at_name];
-    const decoded = verifyToken(accessToken, config.api.token.at_secret)
-    if (!decoded) {
-      return res.status(500).send('couldn\'t logout user. Please try again later')
+router.post("/logout", async (req, res) => {
+  const cookies = req.cookies;
+  const accessToken = cookies["accessToken"];
+  const refreshToken = cookies["refreshToken"];
+  if (!accessToken && !refreshToken) {
+    return res.sendStatus(204); // no content
+  } else {
+    if (accessToken && accessToken.length > 0) {
+      res.clearCookie("accessToken");
     }
-    res.clearCookie(config.api.token.at_name, {httpOnly: true})
-    res.clearCookie(config.api.token.rt_name, {httpOnly: true})
-    await UserModel.findByIdAndUpdate(decoded.decoded.userId, { $set: { sessionValid: false }});
-    return res.sendStatus(200)
+    if (refreshToken && refreshToken.length > 0) {
+      res.clearCookie("refreshToken", { httpOnly: true });
+    }
+    // await UserModel.findByIdAndUpdate(decoded.decoded.userId, {
+    //   $set: { sessionValid: false },
+    // });
+    return res.sendStatus(200);
   }
+});
 
-})
-
-export default router
+export default router;

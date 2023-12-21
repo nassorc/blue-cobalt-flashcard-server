@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "nodemon ./src/index.ts",
+    "t": "nodemon ./src/config/ai.ts",
     "start": "node ./src/index.js",
     "test": "jest"
   },
@@ -23,7 +24,7 @@
     "mongoose": "^7.0.1",
     "morgan": "^1.10.0",
     "nodemon": "^2.0.21",
-    "openai": "^3.2.1",
+    "openai": "^4.22.0",
     "password-validator": "^5.3.0",
     "pino": "^8.15.0",
     "pino-pretty": "^10.2.0",

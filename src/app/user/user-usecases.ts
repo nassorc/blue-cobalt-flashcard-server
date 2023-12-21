@@ -1,63 +1,64 @@
-import jwt from 'jsonwebtoken'
-import mongoose from 'mongoose'
-import User from './Users'
-import AppError from '../../lib/error/AppError'
-import httpStatus from '../../config/httpStatus'
-import config from '../../config/index'
+import jwt from "jsonwebtoken";
+import mongoose from "mongoose";
+import User from "./Users";
+import AppError from "../../lib/error/AppError";
+import httpStatus from "../../config/httpStatus";
+import { createAccessToken, createRefreshToken } from "../../utils/jwt";
 
 export const userService = ((User) => {
   return {
-    getUser: getUser(User),
-    createUser: createUser(User),
-    loginUser: loginUser(User)
-  }
-})(User)
+    query: query,
+    create: create,
+    authenticate: authenticate(User),
+    list: list,
+  };
+})(User);
 
-function getUser(User) {
-  return async (userId) => {
-    const user = await User.findOne({ _id: new mongoose.Types.ObjectId(userId)}, "_id email username deck userPhoto")
-    return user
-  }
+async function query(userId) {
+  const user = await User.findOne(
+    { _id: new mongoose.Types.ObjectId(userId) },
+    "_id email firstName lastName username deck userPhoto profileImage decks"
+  ).populate("decks");
+  return user;
 }
 
-function createUser(User) {
-  return async ({userInfo}) => {
-    if(!userInfo) throw new AppError('Cannot create user. Missing fields', httpStatus.BAD_REQUEST);
-    const {email, password} = userInfo; 
-    const exist = await User.findOne({email})
-    if(exist) throw new AppError('Email already exists', httpStatus.CONFLICT)
-
-    const created = await User.create({email, password})
-    return created
-  }
+async function list(limit, skip) {
+  const users = await User.find({}, "_id profileImage username decks")
+    .sort("id")
+    .limit(limit)
+    .skip(skip);
+  console.log(users);
 }
 
-function loginUser(User) {
-  return async ({ userInfo }) => {
-    const { email, password } = userInfo
-    const user = await User.findOne({email})
-    if(!user) throw new AppError('User does not exist', httpStatus.NOT_FOUND)
+async function create({ userInfo }) {
+  if (!userInfo)
+    throw new AppError(
+      "Cannot create user. Missing fields",
+      httpStatus.BAD_REQUEST
+    );
+  const { email, password } = userInfo;
+  const exist = await User.findOne({ email });
+  if (exist) throw new AppError("Email already exists", httpStatus.CONFLICT);
 
-    const result = await user.compareHashPassword(password)
-    if(!result) throw new AppError('Unauthorized', httpStatus.UNAUTHORIZED)
+  const created = await User.create({ email, password });
+  return created;
+}
+
+function authenticate(User) {
+  return async ({ email, password }) => {
+    const user = await User.findOne({ email });
+    if (!user) throw new AppError("User does not exist", httpStatus.NOT_FOUND);
+
+    const result = await user.compareHashPassword(password);
+    console.log("ResULT", result);
+    if (!result) throw new AppError("Unauthorized", httpStatus.UNAUTHORIZED);
     // if valid credientials, set sessionValid to true
-    await User.findByIdAndUpdate(user._id, {$set: {sessionValid: true}})
+    await User.findByIdAndUpdate(user._id, { $set: { sessionValid: true } });
 
-    const accessToken = jwt.sign({userId: user._id}, process.env.AT_SECRET_KEY, {expiresIn: config.api.token.at_ttl})
-    const refreshToken = jwt.sign({userId: user._id}, process.env.RT_SECRET_KEY, {expiresIn: config.api.token.rt_ttl})
-    const cookies = [
-      {
-        accessToken: {
-          value: accessToken,
-          httpOnly: false,
-        },
-        refreshToken: {
-          value: refreshToken,
-          httpOnly: true,
-        },
-    }]
+    const accessToken = createAccessToken({ userId: user._id });
+    const refreshToken = createRefreshToken({ userId: user._id });
 
-    User.findByIdAndUpdate(user._id, {$set: {sessionValid: false}})
-    return {userId: user._id, cookies}
-  }
+    // User.findByIdAndUpdate(user._id, { $set: { sessionValid: false } });
+    return { userId: user._id, accessToken, refreshToken };
+  };
 }
