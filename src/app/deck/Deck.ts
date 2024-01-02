@@ -32,6 +32,7 @@ const DeckSchema = new mongoose.Schema({
     createdAt: { type: Date, default: new Date().toISOString() },
     tags: { type: [String] },
     deckSettings: { type: deckSettingsSchema },
+    taskStatus: { type: String, enum: ["pending", "complete", "failed"], default: "complete"  }
 });
 
 const Deck = mongoose.model("decks", DeckSchema);
