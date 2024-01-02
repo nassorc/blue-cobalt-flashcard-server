@@ -1,7 +1,7 @@
 import express from "express";
 import validateToken from "../../middleware/validateToken";
 import Task from "../task/Task";
-import { deckService } from "./deck-usecases";
+import { deckService } from "./deck.usecases";
 import HttpStatus from "../../lib/httpStatus";
 
 const router = express.Router();
