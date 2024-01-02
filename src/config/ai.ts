@@ -2,9 +2,7 @@ import OpenAI from "openai";
 
 let ai: any = {};
 
-const openai = new OpenAI({
-  apiKey: "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",
-});
+const openai = new OpenAI({});
 
 ai.generateFlashcards = async function (prompt: string) {
   const res = await openai.chat.completions.create({
@@ -21,7 +19,6 @@ ai.generateFlashcards = async function (prompt: string) {
 };
 
 // const openai = new OpenAIApi(new Configuration({
-//   apiKey: "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"
 // }))
 //
 // let msg: ChatCompletionRequestMessage = {
