@@ -1,14 +1,76 @@
-import * as z from 'zod';
+import { SuperMemoGrade } from "supermemo";
+import * as z from "zod";
 
-// const DeckShema = z.object({
-//     deckName: z.string(),
-//     owner: z.string(),
-//     cards: z.array(),
-//     reviewList: ,
-//     deckImage: ,
-//     deckImageName: ,
-//     blurhash: ,
-//     createdAt: ,
-//     tags: ,
-//     deckSettings: ,
-// })
+const DeckSettingsSchema = z.object({
+  newCards: z.number(),
+  reviewCards: z.number(),
+  isPublic: z.boolean(),
+});
+
+export const DeckShema = z.object({
+  deckName: z.string(),
+  owner: z.string(),
+  deckImage: z.string(),
+  deckImageName: z.string(),
+  blurhash: z.string(),
+  tag: z.array(z.string()),
+  aiAssist: z.boolean(),
+});
+
+export const cardShema = z.object({
+  front: z.string(),
+  back: z.string(),
+  status: z.enum(["new", "reviewed"]),
+
+  interval: z.string(),
+  repetition: z.number(),
+  efactor: z.number(),
+
+  createdAt: z.date(),
+  reviewedDate: z.date(),
+  dueDate: z.date(),
+
+  deckImage: z.string(),
+  deckImageName: z.string(),
+  blurhash: z.string(),
+});
+
+export const ImageFileSchema = z.object({
+  deckImageFile: z.object({
+    data: z.any(),
+    name: z.string(),
+    mimetype: z.string(),
+  }),
+});
+
+export type DeckSettingsType = z.infer<typeof DeckSettingsSchema>;
+export type DeckType = z.infer<typeof DeckShema>;
+export type DeckInputType = Pick<
+  DeckType,
+  "owner" | "deckName" | "aiAssist" | "blurhash"
+> &
+  DeckSettingsType &
+  Partial<ImageFileType>;
+export type CardType = z.infer<typeof cardShema>;
+export type CardInputType = Pick<CardType, "front" | "back">;
+export type GradeCardInput = {
+  userId: string;
+  cardId: string;
+  grade: SuperMemoGrade;
+};
+
+export type ImageFileType = z.infer<typeof ImageFileSchema>;
+
+export const DeckInputSchema = z.object({
+  body: DeckShema.pick({
+    deckName: true,
+    aiAssist: true,
+    blurhash: true,
+  }).merge(DeckSettingsSchema),
+});
+
+export const GetTaskInputSchema = z.object({
+  params: z.object({
+    deckId: z.string(),
+  }),
+});

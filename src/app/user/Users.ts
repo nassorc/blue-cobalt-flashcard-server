@@ -1,39 +1,33 @@
-import mongoose, { Types } from "mongoose"
-import bcrypt from "bcrypt"
+import mongoose, { Types } from "mongoose";
+import bcrypt from "bcrypt";
 
 // blueprint for the structure of user document
 const UserSchema = new mongoose.Schema({
-    email: {type: String, required: true, unique: true},
-    password: {type: String, required: true},
+  email: { type: String, required: true, unique: true },
+  password: { type: String, required: true },
 
-    firstName: {type: String, default: ''},
-    lastName: {type: String, default: ''},
-    biography: {type: String, default: ''},
-    profileImage: {type: String, default: ''},
-    decks: {type: [{type: Types.ObjectId, ref: 'decks'}], default: []},
+  firstName: { type: String, default: "" },
+  lastName: { type: String, default: "" },
+  biography: { type: String, default: "" },
+  userPhoto: { type: String, default: "" },
+  decks: { type: [Types.ObjectId], default: [], ref: "decks" },
 
-    sessionValid: {type: Boolean, default: false},
-})
+  sessionValid: { type: Boolean, default: false },
+});
 
-// encrypt password before saving
-UserSchema.pre('save', async function (next) {
-  const hashedPassword = await bcrypt.hash(this.password, 10)
-  this.password = hashedPassword
-  next()
-})
+UserSchema.pre("save", async function (next) {
+  const hashedPassword = await bcrypt.hash(this.password, 10);
+  this.password = hashedPassword;
+  next();
+});
+
 // add function to decrypt hashed password
-UserSchema.methods.compareHashPassword = async function(password) {
-  const result = await bcrypt.compare(password, this.password)
-  return result
-}
-
-
-const TeacherSchema = new mongoose.Schema({
-    userId: {type: Types.ObjectId, required: true},
-    classList: {type: [Types.ObjectId], default: []}
-})
+UserSchema.methods.compareHashPassword = async function (password: string) {
+  const decoded = await bcrypt.compare(password, this.password);
+  return decoded;
+};
 
 // represents the collection of the document
-const UserModel = mongoose.model('users', UserSchema)
+const UserModel = mongoose.model("users", UserSchema);
 
-export default UserModel
+export default UserModel;
