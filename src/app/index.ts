@@ -1,13 +1,14 @@
 // import authRoute from './authRoute'
-import deckRoute from './deck/deckRoute'
-import userRoute from './user/userRoute'
-import validateToken from '../middleware/validateToken'
-import AppError from '../lib/error/AppError'
+import { Request, Response, NextFunction } from "express";
+import deckRoute from "./deck/deckRoute";
+import userRoute from "./user/userRoute";
+import validateToken from "../middleware/validateToken";
+import { AppError } from "../lib/errors";
 
 module.exports = (app: any) => {
-    app.use('/deck', validateToken, deckRoute)
-    app.use('/user', userRoute)
-    app.all('*', (req, res, next) => {
-      next(new AppError('Route not found', 404))
-    })
-}
+  app.use("/deck", deckRoute);
+  app.use("/user", userRoute);
+  app.all("*", (req: Request, res: Response, next: NextFunction) => {
+    next(new AppError("Route not found", 404));
+  });
+};

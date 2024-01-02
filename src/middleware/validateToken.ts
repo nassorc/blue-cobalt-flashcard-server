@@ -1,29 +1,43 @@
 import { Request, Response, NextFunction } from "express";
-import log from "../lib/logger";
+import log from "../config/logger";
 import UserModel from "../app/user/Users";
-import AppError from "../lib/error/AppError";
-import config from "../config";
+import { AppError, ServerError } from "../lib/errors";
 // import { signToken, verifyToken } from "../lib/jwt";
-import { verify, signToken } from "../utils/jwt";
-import httpStatus from "../config/httpStatus";
+import { verifyJWT, signToken } from "../utils/jwt";
+import HttpStatus from "../lib/httpStatus";
+
+const at_key = "accessToken";
+const rt_key = "refreshToken";
 
 const validateToken = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
-  let accessToken = req.cookies[config.api.token.at_name];
-  let refreshToken = req.cookies[config.api.token.rt_name];
+  let accessToken = req.cookies[at_key];
+  let refreshToken = req.cookies[rt_key];
+
+  log.debug("validating");
 
   if (!accessToken || !refreshToken) {
-    next(new AppError("No valid tokens provided", httpStatus.UNAUTHORIZED));
+    next(new AppError("No valid tokens provided", HttpStatus.UNAUTHORIZED));
+  }
+  if (!process.env.AT_SECRET_KEY || !process.env.RT_SECRET_KEY) {
+    log.error("missing access or refresh token env variables");
+    next(new ServerError("Missing env variables"));
   }
 
-  const decodedAccessToken = verify(accessToken, process.env.AT_SECRET_KEY);
+  const decodedAccessToken = verifyJWT(
+    accessToken,
+    process.env.AT_SECRET_KEY || ""
+  );
 
   // if access token is expired
   if (decodedAccessToken.expired) {
-    const decodeRefreshToken = verify(refreshToken, process.env.RT_SECRET_KEY);
+    const decodeRefreshToken = verifyJWT(
+      refreshToken,
+      process.env.RT_SECRET_KEY || ""
+    );
     // if both access and refresh token are expired
     if (decodeRefreshToken.expired) {
       // set user session to invalid
@@ -37,11 +51,11 @@ const validateToken = async (
 
     // valid refresh token
     const sessionValid = await (
-      await UserModel.findById(
-        decodeRefreshToken.decoded.userId,
+      await UserModel?.findById(
+        decodeRefreshToken?.decoded?.userId,
         "sessionValid"
       )
-    ).sessionValid;
+    )?.sessionValid;
     if (!sessionValid) {
       next(new AppError("Invalid session", 401));
     }
@@ -49,11 +63,11 @@ const validateToken = async (
     log.info("Session valid, reissuing Access token");
     const reIssuedAccessToken = signToken(
       { userId: decodeRefreshToken.decoded.userId },
-      process.env.AT_SECRET_KEY,
-      { expiresIn: config.api.token.at_ttl }
+      process.env.AT_SECRET_KEY || "",
+      { expiresIn: process.env.AT_TTL }
     );
-    res.clearCookie(config.api.token.at_name);
-    res.cookie(config.api.token.at_name, reIssuedAccessToken);
+    res.clearCookie(at_key);
+    res.cookie(at_key, reIssuedAccessToken);
     // token reissued, call next()
     req.body = Object.assign(req.body, {
       locals: { userId: decodeRefreshToken.decoded.userId },
@@ -61,10 +75,9 @@ const validateToken = async (
   } else if (!decodedAccessToken.valid) {
     next(new AppError("Invalid Access Token", 401));
   } else {
-    // valid access token
+    // @ts-ignore
     req.user = {};
-
-    req.user = Object.assign(req.user, {
+    Object.assign(req.user, {
       id: decodedAccessToken.decoded.userId,
     });
   }

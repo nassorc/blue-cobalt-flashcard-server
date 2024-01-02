@@ -1,140 +1,238 @@
 import { supermemo } from "supermemo";
 import mongoose from "mongoose";
 import Deck from "./Deck";
-import db from "../../config/db";
-import { generateId } from "../../utils/utils";
-import AppError from "../../lib/error/AppError";
+import { userService } from "../user/user-usecases";
+import { NotFound, ServerError } from "../../lib/errors";
+import { CardInputType, DeckInputType, GradeCardInput } from "./Schema";
+import supabase, { createImageURL, uploadFile } from "../../config/supabase";
+import Task from "../task/Task";
+import UserModel from "../user/Users";
+import log from "../../config/logger";
 
-export const deckService = ((Deck) => {
-  return {
-    addNewFlashcard: addNewFlashcard(Deck),
-    createNewFlashcardDeck: createNewFlashcardDeck,
-    getOneFlashcardDeck: getOneFlashcardDeck(Deck),
-    getAllFlashcardDecks: getAllFlashcardDecks(Deck),
-    updateDeck: updateDeck(Deck),
-    removeDeck: removeDeck(Deck),
-    gradeCard: gradeCard(Deck, supermemo),
-  };
-})(Deck);
-
-export function addNewFlashcard(Deck) {
-  return async (deckId, cardInfo) => {
-    await Deck.findOneAndUpdate(
-      { _id: deckId },
-      { $push: { cards: cardInfo } }
-    );
-    return 1;
-  };
+export async function addNewFlashcard(deckId: string, cardInfo: CardInputType) {
+  await UserModel.findOneAndUpdate(
+    { _id: deckId },
+    { $push: { cards: cardInfo } }
+  );
 }
 
-export async function createNewFlashcardDeck(deckInfo) {
-  const generateFlashcards = deckInfo.generateFlashcards; 
-  const generateDeckImage = deckInfo.generateDeckImage; 
-
-  let submissionStage = "";
-
-  try {
-    const deck = new Deck(deckInfo);
-    await deck.save();
-    const submissionId = generateId();
-    await db.PendingSubmission.create({
-       deckId: deckInfo.id,
-       submissionId: submissionId,
-       state: "stage 1"
-    })
-  } catch(err) {
+export async function create(deckInfo: DeckInputType) {
+  const exists = await userService.query(deckInfo.owner);
+  if (!exists) {
+    log.debug("Cannot create deck. User does not exist");
+    throw new NotFound("User does not exist");
   }
 
-}
+  const deck = new Deck({
+    deckName: deckInfo.deckName,
+    owner: deckInfo.owner,
+    taskStatus: "pending",
+    blurhash: deckInfo.blurhash,
+  });
+  await deck.save();
 
-export function getOneFlashcardDeck(Deck) {
-  return async (deckId) => {
-    let id = new mongoose.mongo.ObjectId(deckId);
-    const deckList = await Deck.findOne({ _id: id });
-    return deckList;
-  };
-}
+  await UserModel.findOneAndUpdate(
+    { _id: deckInfo.owner },
+    { $push: { decks: deck._id } }
+  );
 
-export function getAllFlashcardDecks(Deck) {
-  return async (userId) => {
-    let id = new mongoose.mongo.ObjectId(userId);
-    const deckList = await Deck.find({ owner: id });
-    return deckList;
-  };
-}
+  const task = new Task({
+    deckId: deck._id,
+  });
+  await task.save();
+  const taskId = task._id;
 
-export function updateDeck(Deck) {
-  return async (deckId, deckInfo) => {
-    await Deck.findOneAndUpdate(
-      { _id: new mongoose.Types.ObjectId(deckId) },
-      { $set: deckInfo }
-    );
-  };
-}
+  try {
+    let imagePath = "";
+    let imageURL = "";
+    let blurhash = deckInfo.blurhash;
 
-export function removeDeck(Deck) {
-  return async (deckId) => {
-    await Deck.deleteOne({ _id: deckId });
-  };
-}
-
-export function gradeCard(Deck, practice) {
-  return async (userId, cardId, grade) => {
-    try {
-      const foundDeck = await Deck.findOne(
-        { owner: userId, "cards._id": cardId },
-        { cards: { $elemMatch: { _id: cardId } } }
+    const doThing = async () => {
+      // upload deck image
+      await Task.findOneAndUpdate(
+        { _id: taskId },
+        { $push: { tasks: "Uploading Image" } }
       );
-      // extract data to update due data
-      const card = foundDeck.cards[0];
-      const stats = {
-        interval: card.interval,
-        repetition: card.repetition,
-        efactor: card.efactor,
-        status: card.status,
-      };
-      // insert data to algorithm
-      const { interval, repetition, efactor } = practice(stats, grade);
-      const reviewedDate = new Date();
-      let date = new Date();
-      let dueDate = new Date();
-      // set new due date
-      dueDate.setDate(date.getDate() + interval);
+      if ("deckImageFile" in deckInfo) {
+        // convert file upload to blob
+        const deckImageStoragePath = `/public/${deck._id}`;
+        const imageBlob = new Blob([deckInfo?.deckImageFile?.data], {
+          type: deckInfo?.deckImageFile?.mimetype,
+        });
 
-      // if card type is new, set to reviewed
-      if (stats.status === "new" && interval > 0) {
-        // update data
-        await Deck.findOneAndUpdate(
-          { owner: userId, "cards._id": cardId },
-          {
-            $set: {
-              "cards.$.interval": interval,
-              "cards.$.repetition": repetition,
-              "cards.$.efactor": efactor,
-              "cards.$.status": "reviewed",
-              "cards.$.reviewedDate": reviewedDate.toISOString(),
-              "cards.$.dueDate": dueDate.toISOString(),
-            },
-            $push: { reviewList: cardId },
-          }
+        const bucket = "deck_images";
+
+        const { error, data } = await uploadFile(
+          bucket,
+          `/public/${deck._id}`,
+          imageBlob
         );
-      } else {
-        // update data
-        await Deck.findOneAndUpdate(
-          { owner: userId, "cards._id": cardId },
-          {
-            $set: {
-              "cards.$.interval": interval,
-              "cards.$.repetition": repetition,
-              "cards.$.efactor": efactor,
-              "cards.$.reviewedDate": reviewedDate.toISOString(),
-              "cards.$.dueDate": dueDate.toISOString(),
-            },
-          }
+
+        if (error) {
+          throw new ServerError("Could not upload image");
+        }
+
+        const { data: signedURL, error: signedError } = await createImageURL(
+          bucket,
+          `/public/${deck._id}`
+        );
+
+        if (signedError) {
+          // console.error("error", signedError.message)
+          throw new ServerError(signedError.message);
+        }
+
+        imagePath = data.path;
+        imageURL = signedURL.signedUrl;
+      }
+
+      if (deckInfo.aiAssist) {
+        await Task.findOneAndUpdate(
+          { _id: taskId },
+          { $push: { tasks: "AI generating flash cards." } }
         );
       }
-    } catch (err) {
-      throw new Error(err);
-    }
-  };
+
+      await Task.findOneAndUpdate(
+        { _id: taskId },
+        { $push: { tasks: "Saving Deck." } }
+      );
+
+      await Deck.findOneAndUpdate(
+        { _id: task.deckId },
+        {
+          deckImage: imageURL,
+          deckImageName: imagePath,
+          blurhash: blurhash,
+          taskStatus: "complete",
+        }
+      );
+
+      await Task.findOneAndUpdate(
+        { _id: taskId },
+        {
+          $push: { tasks: "Task complete." },
+          $set: { isPending: false },
+        }
+      );
+    };
+    doThing();
+    return { taskId: taskId };
+  } catch (err) {
+    await Task.findOneAndUpdate(
+      { _id: taskId },
+      {
+        $push: { tasks: "Task complete." },
+        $set: {
+          isPending: false,
+          success: false,
+          errorMessage: "something went wrong.",
+        },
+      }
+    );
+    await Deck.findOneAndUpdate(
+      { id: task.deckId },
+      {
+        $set: {
+          taskStatus: "failed",
+        },
+      }
+    );
+    log.error("task error", err);
+  }
 }
+
+export async function getOneFlashcardDeck(deckId: string) {
+  let id = new mongoose.mongo.ObjectId(deckId);
+  const deckList = await Deck.findOne({ _id: id });
+  return deckList;
+}
+
+export async function getAllFlashcardDecks(userId: string) {
+  let id = new mongoose.mongo.ObjectId(userId);
+  const deckList = await Deck.find({ owner: id });
+  return deckList;
+}
+
+export async function updateDeck(deckId: string, deckInfo: DeckInputType) {
+  await Deck.findOneAndUpdate(
+    { _id: new mongoose.Types.ObjectId(deckId) },
+    { $set: deckInfo }
+  );
+}
+
+export async function remove(deckId: string) {
+  await supabase.storage.from("deck_images").remove([`public/${deckId}`]);
+  await Deck.deleteOne({ _id: deckId });
+}
+
+export async function gradeCard({ userId, cardId, grade }: GradeCardInput) {
+  try {
+    const foundDeck = await Deck.findOne(
+      { owner: userId, "cards._id": cardId },
+      { cards: { $elemMatch: { _id: cardId } } }
+    );
+    if (!foundDeck) {
+      throw new NotFound("Flashcard not found");
+    }
+    // extract data to update due data
+    const card = foundDeck.cards[0];
+    const stats = {
+      interval: card.interval,
+      repetition: card.repetition,
+      efactor: card.efactor,
+      status: card.status,
+    };
+    // insert data to algorithm
+    const { interval, repetition, efactor } = supermemo(stats, grade);
+    const reviewedDate = new Date();
+    let date = new Date();
+    let dueDate = new Date();
+    // set new due date
+    dueDate.setDate(date.getDate() + interval);
+
+    // if card type is new, set to reviewed
+    if (stats.status === "new" && interval > 0) {
+      // update data
+      await Deck.findOneAndUpdate(
+        { owner: userId, "cards._id": cardId },
+        {
+          $set: {
+            "cards.$.interval": interval,
+            "cards.$.repetition": repetition,
+            "cards.$.efactor": efactor,
+            "cards.$.status": "reviewed",
+            "cards.$.reviewedDate": reviewedDate.toISOString(),
+            "cards.$.dueDate": dueDate.toISOString(),
+          },
+          $push: { reviewList: cardId },
+        }
+      );
+    } else {
+      // update data
+      await Deck.findOneAndUpdate(
+        { owner: userId, "cards._id": cardId },
+        {
+          $set: {
+            "cards.$.interval": interval,
+            "cards.$.repetition": repetition,
+            "cards.$.efactor": efactor,
+            "cards.$.reviewedDate": reviewedDate.toISOString(),
+            "cards.$.dueDate": dueDate.toISOString(),
+          },
+        }
+      );
+    }
+  } catch (err: any) {
+    throw new Error(err);
+  }
+}
+export const deckService = {
+  addNewFlashcard: addNewFlashcard,
+  createNewFlashcardDeck: create,
+  getOneFlashcardDeck: getOneFlashcardDeck,
+  getAllFlashcardDecks: getAllFlashcardDecks,
+  updateDeck: updateDeck,
+  removeDeck: remove,
+  gradeCard: gradeCard,
+};

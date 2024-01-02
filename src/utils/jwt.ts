@@ -1,5 +1,7 @@
-import jwt, { TokenExpiredError, SignOptions, Secret } from "jsonwebtoken";
+// @ts-nocheck
+import jwt, { TokenExpiredError, Secret } from "jsonwebtoken";
 import "dotenv/config";
+import { ServerError } from "../lib/errors";
 
 interface DecodedJWT {
   decoded: any;
@@ -16,28 +18,34 @@ export function signToken(
   return token;
 }
 
-export function sign(payload, opts: { ttl: number; secret: string }) {
+export function sign(
+  payload: string | object | Buffer,
+  opts: { ttl: number; secret: Secret }
+) {
   const token = jwt.sign(payload, opts.secret, {
     expiresIn: opts.ttl,
   });
   return token;
 }
 
-export function createAccessToken(payload) {
+export function createAccessToken(payload: string | object | Buffer) {
+  if (!process.env.AT_TTL) {
+    throw new ServerError("Access token TTL not defined");
+  }
   return sign(payload, {
-    ttl: parseInt(process.env.AT_TTL),
+    ttl: process.env.AT_TTL,
     secret: process.env.AT_SECRET_KEY,
   });
 }
 
-export function createRefreshToken(payload) {
+export function createRefreshToken(payload: string | object | Buffer) {
   return sign(payload, {
-    ttl: parseInt(process.env.RT_TTL),
+    ttl: process.env.RT_TTL,
     secret: process.env.RT_SECRET_KEY,
   });
 }
 
-export function verify(token: string, key: Secret): DecodedJWT {
+export function verifyJWT(token: string, key: Secret): DecodedJWT {
   try {
     const decoded = jwt.verify(token, key);
     return {

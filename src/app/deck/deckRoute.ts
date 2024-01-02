@@ -1,60 +1,74 @@
 import express from "express";
-import makeCallback from "../../middleware/controllerHandler";
+import validateToken from "../../middleware/validateToken";
+import Task from "../task/Task";
+import { deckService } from "./deck-usecases";
+import HttpStatus from "../../lib/httpStatus";
+
 const router = express.Router();
-import {
-  getOneDeckHandler,
-  getManyDecksHandler,
-  addDeckHandler,
-  updateDeckHandler,
-  deleteDeckHandler,
-  gradeCardHandler,
-  addCardsHandler,
-} from "./deck-controllers";
 
-/**
- * @api {post} /deck/ Post new Deck
- * @apiName PostDeck
- * @apiGroup Deck
- */
-router.post("/", makeCallback(addDeckHandler));
+import { DeckInputSchema, GetTaskInputSchema } from "./Schema";
+import validateRequest from "../../middleware/validateRequest";
 
-/**
- * @api {get} /deck/:id Get user decks
- * @apiName GetDeck
- * @apiGroup Deck
- *
- * @apiParam {String} id User id
- *
- * @apiSuccess {String} deckName Deck Name
- * @apiSuccess {[Object]} cards Array of card objects owned by user
- */
-router.get("/:id", makeCallback(getManyDecksHandler));
+router.get("/:deckId/task", async (req, res) => {
+  const {
+    params: { deckId },
+  } = await validateRequest(GetTaskInputSchema, req);
+  const taskData = await Task.findOne({
+    deckId: deckId,
+  });
 
-router.get("/get/:id", makeCallback(getOneDeckHandler));
-/**
- * @api {post} /deck/:id
- * @apiName UpdateDeck /deck/:id Update user deck
- * @apiGroup Deck
- *
- * @apiParam {String} id Deck id
- */
-router.post("/update/:id", makeCallback(updateDeckHandler));
+  res.status(200).send(taskData);
+});
 
-router.post("/delete/:id", makeCallback(deleteDeckHandler));
+router.post("/", validateToken, async (req, res) => {
+  let tempBody: any = {};
+  for (const [key, value] of Object.entries(req.body)) {
+    if (typeof key === "string") {
+      tempBody[key] = JSON.parse(value as any);
+    }
+  }
+  Object.assign(req.body, tempBody);
+  const { body } = await validateRequest(DeckInputSchema, req);
+  const { id } = req.user;
 
-// Card routes
+  const response = await deckService.createNewFlashcardDeck({
+    ...body,
+    owner: id,
+    deckImageFile: req.files?.deckImage as any,
+  });
 
-router.post("/cards", makeCallback(addCardsHandler));
-/**
- * @api {post} /cards/update/:id Update card
- * @apiName UpdateCard
- * @apiGroup Card
- *
- * @apiParam {String} if Deck id
- *
- */
-// router.post('/cards/update/:id', makeCallback(updateDeck))
+  res.status(HttpStatus.CREATED).send(response);
+});
 
-router.post("/cards/grade", makeCallback(gradeCardHandler));
+router.get("/:id", async (req, res) => {
+  const deckList = await deckService.getAllFlashcardDecks(req.params.id);
+});
+
+router.get("/get/:id", async (req, res) => {
+  const deckList = await deckService.getOneFlashcardDeck(req.params.id);
+  // return createResponse(httpStatus.SUCCESS, {deckList})
+});
+
+router.delete("/delete/:id", validateToken, async (req, res) => {
+  const { id } = req.params;
+  console.log("deleting deck", id);
+  await deckService.removeDeck(id);
+  res.sendStatus(200);
+});
+
+router.post("/:id/card/grade", async (req, res) => {
+  await deckService.gradeCard(req.body);
+  res.status(HttpStatus.OK).send({ message: "card graded" });
+});
+
+router.post("/update/:id", async (req, res) => {
+  await deckService.updateDeck(req.params.id, req.body.details);
+  // return createResponse(httpStatus.SUCCESS, {message:'updated'})
+});
+
+router.post("/cards", async (req, res) => {
+  await deckService.addNewFlashcard(req?.body?.deckId, req?.body?.cards);
+  // return createResponse(httpStatus.SUCCESS, {message: 'card added'})
+});
 
 export default router;
