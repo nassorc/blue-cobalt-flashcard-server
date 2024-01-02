@@ -1,7 +1,7 @@
 import { supermemo } from "supermemo";
 import mongoose from "mongoose";
 import Deck from "./Deck";
-import { userService } from "../user/user-usecases";
+import { userService } from "../user/user.usecases";
 import { NotFound, ServerError } from "../../lib/errors";
 import { CardInputType, DeckInputType, GradeCardInput } from "./Schema";
 import supabase, { createImageURL, uploadFile } from "../../config/supabase";

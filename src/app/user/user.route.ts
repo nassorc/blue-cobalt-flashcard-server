@@ -2,7 +2,7 @@ import express from "express";
 import validateToken from "../../middleware/validateToken";
 import validateSchema from "../../middleware/validateRequest";
 import { LoginInputSchema } from "./Schema";
-import { userService } from "./user-usecases";
+import { userService } from "./user.usecases";
 import HttpStatus from "../../lib/httpStatus";
 import "dotenv/config";
 
