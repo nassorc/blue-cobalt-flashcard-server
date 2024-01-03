@@ -6,7 +6,11 @@ import HttpStatus from "../../lib/httpStatus";
 
 const router = express.Router();
 
-import { DeckInputSchema, GetTaskInputSchema } from "./Schema";
+import {
+  DeckInputSchema,
+  GetTaskInputSchema,
+  GradeCardInputSchema,
+} from "./Schema";
 import validateRequest from "../../middleware/validateRequest";
 
 router.get("/:deckId/task", async (req, res) => {
@@ -56,9 +60,13 @@ router.delete("/delete/:id", validateToken, async (req, res) => {
   res.sendStatus(200);
 });
 
-router.post("/:id/card/grade", async (req, res) => {
-  await deckService.gradeCard(req.body);
-  res.status(HttpStatus.OK).send({ message: "card graded" });
+router.post("/:deckId/card/:cardId/grade", async (req, res) => {
+  const { deckId, cardId } = req.params;
+  const {
+    body: { grade },
+  } = await validateRequest(GradeCardInputSchema, req);
+  await deckService.gradeCard({ deckId, cardId, grade });
+  res.sendStatus(HttpStatus.OK);
 });
 
 router.post("/update/:id", async (req, res) => {

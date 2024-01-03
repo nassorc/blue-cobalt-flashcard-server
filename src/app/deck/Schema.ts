@@ -43,24 +43,6 @@ export const ImageFileSchema = z.object({
   }),
 });
 
-export type DeckSettingsType = z.infer<typeof DeckSettingsSchema>;
-export type DeckType = z.infer<typeof DeckShema>;
-export type DeckInputType = Pick<
-  DeckType,
-  "owner" | "deckName" | "aiAssist" | "blurhash"
-> &
-  DeckSettingsType &
-  Partial<ImageFileType>;
-export type CardType = z.infer<typeof cardShema>;
-export type CardInputType = Pick<CardType, "front" | "back">;
-export type GradeCardInput = {
-  userId: string;
-  cardId: string;
-  grade: SuperMemoGrade;
-};
-
-export type ImageFileType = z.infer<typeof ImageFileSchema>;
-
 export const DeckInputSchema = z.object({
   body: DeckShema.pick({
     deckName: true,
@@ -74,3 +56,27 @@ export const GetTaskInputSchema = z.object({
     deckId: z.string(),
   }),
 });
+
+export const GradeCardInputSchema = z.object({
+  body: z.object({
+    grade: z.number().min(0).max(5),
+  }),
+});
+
+export type DeckSettingsType = z.infer<typeof DeckSettingsSchema>;
+export type DeckType = z.infer<typeof DeckShema>;
+export type DeckInputType = Pick<
+  DeckType,
+  "owner" | "deckName" | "aiAssist" | "blurhash"
+> &
+  DeckSettingsType &
+  Partial<ImageFileType>;
+export type CardType = z.infer<typeof cardShema>;
+export type CardInputType = Pick<CardType, "front" | "back">;
+export type GradeCardInput = {
+  deckId: string;
+  cardId: string;
+  grade: number;
+};
+
+export type ImageFileType = z.infer<typeof ImageFileSchema>;

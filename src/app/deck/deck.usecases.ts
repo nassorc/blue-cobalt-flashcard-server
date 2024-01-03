@@ -1,4 +1,4 @@
-import { supermemo } from "supermemo";
+import { SuperMemoGrade, supermemo } from "supermemo";
 import mongoose from "mongoose";
 import Deck from "./Deck";
 import { userService } from "../user/user.usecases";
@@ -166,10 +166,11 @@ export async function remove(deckId: string) {
   await Deck.deleteOne({ _id: deckId });
 }
 
-export async function gradeCard({ userId, cardId, grade }: GradeCardInput) {
+export async function gradeCard({ deckId, cardId, grade }: GradeCardInput) {
   try {
+    log.debug("Grading card");
     const foundDeck = await Deck.findOne(
-      { owner: userId, "cards._id": cardId },
+      { _id: deckId, "cards._id": cardId },
       { cards: { $elemMatch: { _id: cardId } } }
     );
     if (!foundDeck) {
@@ -177,6 +178,7 @@ export async function gradeCard({ userId, cardId, grade }: GradeCardInput) {
     }
     // extract data to update due data
     const card = foundDeck.cards[0];
+    log.debug(`from ${card}`);
     const stats = {
       interval: card.interval,
       repetition: card.repetition,
@@ -184,7 +186,10 @@ export async function gradeCard({ userId, cardId, grade }: GradeCardInput) {
       status: card.status,
     };
     // insert data to algorithm
-    const { interval, repetition, efactor } = supermemo(stats, grade);
+    const { interval, repetition, efactor } = supermemo(
+      stats,
+      grade as SuperMemoGrade
+    );
     const reviewedDate = new Date();
     let date = new Date();
     let dueDate = new Date();
@@ -195,7 +200,7 @@ export async function gradeCard({ userId, cardId, grade }: GradeCardInput) {
     if (stats.status === "new" && interval > 0) {
       // update data
       await Deck.findOneAndUpdate(
-        { owner: userId, "cards._id": cardId },
+        { _id: deckId, "cards._id": cardId },
         {
           $set: {
             "cards.$.interval": interval,
@@ -211,7 +216,7 @@ export async function gradeCard({ userId, cardId, grade }: GradeCardInput) {
     } else {
       // update data
       await Deck.findOneAndUpdate(
-        { owner: userId, "cards._id": cardId },
+        { _id: deckId, "cards._id": cardId },
         {
           $set: {
             "cards.$.interval": interval,
