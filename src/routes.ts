@@ -1,9 +1,8 @@
 // import authRoute from './authRoute'
 import { Request, Response, NextFunction } from "express";
-import deckRoute from "./app/deck/deckRoute";
-import userRoute from "./app/user/userRoute";
+import deckRoute from "./app/deck/deck.route";
+import userRoute from "./app/user/user.route";
 import { AppError } from "./lib/errors";
-import log from "./config/logger";
 
 module.exports = (app: any) => {
   app.use("/deck", deckRoute);
