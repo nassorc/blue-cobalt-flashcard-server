@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "nodemon ./src/index.ts",
     "ai": "nodemon ./src/config/ai.ts",
+    "build": "tsc",
     "start": "node ./src/index.js",
     "test": "jest"
   },
